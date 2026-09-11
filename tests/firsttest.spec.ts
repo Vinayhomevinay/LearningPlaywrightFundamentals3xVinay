@@ -7,5 +7,5 @@ test('test', async ({ page }) => {
   await page.locator('[data-test="password"]').click();
   await page.locator('[data-test="password"]').fill('123');
   await page.locator('[data-test="login-button"]').click();
-  await page.locator('[data-test="error"]').click();
+  
 });

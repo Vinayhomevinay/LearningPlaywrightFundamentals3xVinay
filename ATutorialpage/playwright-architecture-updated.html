@@ -1,0 +1,673 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Playwright Architecture</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0F131A;
+    --panel:#1A212C;
+    --panel-alt:#151B24;
+    --panel-deep:#11161E;
+    --border:#2B3441;
+    --border-soft:#232B36;
+    --text:#E7EAF0;
+    --text-dim:#8B96A8;
+    --text-faint:#5B6577;
+    --ws:#45D8C6;
+    --ws-dim:#2C3E3E;
+    --cdp:#F0A83E;
+    --cdp-dim:#3E362A;
+    --chromium:#5B9BF0;
+    --firefox:#F2864B;
+    --webkit:#A78CF0;
+  }
+
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--bg);
+    color:var(--text);
+    font-family:'Inter',sans-serif;
+    line-height:1.55;
+    padding:56px 24px 80px;
+  }
+  .wrap{max-width:1180px;margin:0 auto;}
+
+  /* ---------- Header ---------- */
+  header{max-width:660px;margin-bottom:56px;}
+  h1{
+    font-family:'Space Grotesk',sans-serif;
+    font-weight:700;
+    font-size:clamp(32px,5vw,44px);
+    letter-spacing:-0.02em;
+    margin:0 0 14px;
+  }
+  header p{
+    color:var(--text-dim);
+    font-size:16px;
+    margin:0;
+    max-width:56ch;
+  }
+
+  h2{
+    font-family:'Space Grotesk',sans-serif;
+    font-weight:600;
+    font-size:20px;
+    margin:0 0 20px;
+    letter-spacing:-0.01em;
+  }
+
+  /* ---------- Diagram section ---------- */
+  .diagram{
+    background:var(--panel-deep);
+    border:1px solid var(--border-soft);
+    border-radius:16px;
+    padding:52px 40px 44px;
+    margin-bottom:28px;
+    overflow-x:auto;
+  }
+  .flow{
+    display:flex;
+    align-items:center;
+    gap:0;
+    min-width:920px;
+  }
+
+  .node{
+    position:relative;
+    background:var(--panel);
+    border:1px solid var(--border);
+    border-radius:12px;
+    padding:18px 20px;
+    flex-shrink:0;
+  }
+  .node-title{
+    font-family:'Space Grotesk',sans-serif;
+    font-weight:600;
+    font-size:16px;
+  }
+  .node-sub{
+    color:var(--text-dim);
+    font-size:12.5px;
+    margin-top:3px;
+    font-family:'JetBrains Mono',monospace;
+  }
+  .lang-row{
+    margin-top:10px;
+    font-size:11.5px;
+    font-family:'JetBrains Mono',monospace;
+    color:var(--text-faint);
+    border-top:1px solid var(--border-soft);
+    padding-top:8px;
+  }
+  .client{width:190px;}
+  .server{width:200px;text-align:center;}
+  .server .node-title{font-size:15.5px;}
+
+  /* ---------- badges ---------- */
+  .badge{
+    position:absolute;
+    top:-11px; right:-11px;
+    width:22px;height:22px;
+    border-radius:50%;
+    background:var(--bg);
+    border:1.5px solid var(--text-dim);
+    color:var(--text);
+    font-family:'JetBrains Mono',monospace;
+    font-size:11px;
+    display:flex;align-items:center;justify-content:center;
+    z-index:2;
+  }
+
+  /* ---------- links between nodes ---------- */
+  .link{
+    position:relative;
+    flex:1;
+    min-width:120px;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    gap:6px;
+    padding:0 6px;
+  }
+  .link-label{
+    font-family:'JetBrains Mono',monospace;
+    font-size:12px;
+    font-weight:500;
+  }
+  .link-line{
+    width:100%;
+    height:2px;
+    border-radius:2px;
+    position:relative;
+  }
+  .link-line::before,.link-line::after{
+    content:'';
+    position:absolute;
+    top:50%;
+    width:7px;height:7px;
+    border-radius:50%;
+  }
+  .link-line::before{left:-3px;transform:translateY(-50%);}
+  .link-line::after{right:-3px;transform:translateY(-50%);}
+
+  .ws-link .link-label{color:var(--ws);}
+  .ws-link .link-line{background:var(--ws);}
+  .ws-link .link-line::before,.ws-link .link-line::after{background:var(--ws);}
+
+  .cdp-link .link-label{color:var(--cdp);}
+  .cdp-link .link-line{background:var(--cdp);}
+  .cdp-link .link-line::before,.cdp-link .link-line::after{background:var(--cdp);}
+
+  .json-chip{
+    position:relative;
+    background:var(--ws-dim);
+    border:1px solid var(--ws);
+    border-radius:8px;
+    color:#CFF7EF;
+    font-family:'JetBrains Mono',monospace;
+    font-size:10.5px;
+    padding:8px 10px;
+    white-space:nowrap;
+    margin-top:2px;
+  }
+
+  /* ---------- engines / bracket ---------- */
+  .engines{
+    display:flex;
+    flex-direction:column;
+    gap:12px;
+    border-left:2px solid var(--cdp);
+    padding-left:0;
+    flex-shrink:0;
+  }
+  .engine-row{
+    display:flex;
+    align-items:center;
+    gap:0;
+  }
+  .tick{
+    width:22px;
+    height:2px;
+    background:var(--cdp);
+    flex-shrink:0;
+  }
+  .engine{
+    position:relative;
+    width:190px;
+    padding:12px 16px;
+    display:flex;
+    align-items:center;
+    gap:10px;
+    border-radius:10px;
+  }
+  .engine .dot{width:9px;height:9px;border-radius:50%;flex-shrink:0;}
+  .engine .node-title{font-size:14.5px;}
+  .engine .node-sub{margin-top:1px;}
+  .engine.chromium{border-left:3px solid var(--chromium);}
+  .engine.firefox{border-left:3px solid var(--firefox);}
+  .engine.webkit{border-left:3px solid var(--webkit);}
+  .chromium .dot{background:var(--chromium);}
+  .firefox .dot{background:var(--firefox);}
+  .webkit .dot{background:var(--webkit);}
+
+  /* ---------- hierarchy section ---------- */
+  .hierarchy{
+    background:var(--panel-deep);
+    border:1px solid var(--border-soft);
+    border-radius:16px;
+    padding:36px 40px 40px;
+    margin-bottom:28px;
+  }
+  .nest{border-radius:12px;position:relative;}
+  .browser-box{
+    background:var(--panel-alt);
+    border:1px solid var(--border);
+    padding:34px 28px 28px;
+  }
+  .context-box{
+    background:var(--panel);
+    border:1px solid var(--border);
+    padding:30px 24px 22px;
+    margin-top:6px;
+    max-width:560px;
+  }
+  .nest-label{
+    position:absolute;
+    top:-12px;left:16px;
+    background:var(--bg);
+    padding:2px 10px;
+    border-radius:6px;
+    font-family:'JetBrains Mono',monospace;
+    font-size:12.5px;
+    color:var(--text-dim);
+    display:flex;align-items:center;gap:8px;
+    border:1px solid var(--border-soft);
+  }
+  .nest-label .badge{position:static;width:18px;height:18px;font-size:9.5px;}
+  .pages-row{display:flex;gap:14px;flex-wrap:wrap;}
+  .page-box{
+    position:relative;
+    background:var(--panel-deep);
+    border:1px solid var(--border);
+    border-radius:8px;
+    padding:14px 22px;
+    font-family:'JetBrains Mono',monospace;
+    font-size:13px;
+    color:var(--text-dim);
+  }
+  .page-box.ghost{opacity:0.45;}
+
+  /* ---------- legend ---------- */
+  .legend{
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:28px;
+  }
+  .legend-group{
+    background:var(--panel-deep);
+    border:1px solid var(--border-soft);
+    border-radius:14px;
+    padding:24px 22px;
+  }
+  .legend-group h3{
+    font-family:'Space Grotesk',sans-serif;
+    font-size:13px;
+    text-transform:none;
+    color:var(--text-dim);
+    margin:0 0 14px;
+    font-weight:600;
+  }
+  .legend-item{
+    display:flex;
+    gap:12px;
+    margin-bottom:14px;
+  }
+  .legend-item:last-child{margin-bottom:0;}
+  .legend-num{
+    flex-shrink:0;
+    width:22px;height:22px;
+    border-radius:50%;
+    border:1.5px solid var(--text-dim);
+    font-family:'JetBrains Mono',monospace;
+    font-size:11px;
+    display:flex;align-items:center;justify-content:center;
+    margin-top:1px;
+  }
+  .legend-item p{margin:0;font-size:13.5px;color:var(--text);}
+  .legend-item strong{font-weight:600;}
+  .legend-item .tag{color:var(--text-dim);font-size:12px;}
+
+  footer{
+    max-width:760px;
+    margin-top:28px;
+    font-size:12.5px;
+    color:var(--text-faint);
+    border-top:1px solid var(--border-soft);
+    padding-top:16px;
+  }
+  footer code{
+    font-family:'JetBrains Mono',monospace;
+    color:var(--text-dim);
+  }
+
+  @media (max-width:900px){
+    .legend{grid-template-columns:1fr;}
+  }
+
+  /* ---------- guided flow ---------- */
+  .flow-controls{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:16px;
+    margin-bottom:26px;
+    padding:14px 16px;
+    background:var(--panel-alt);
+    border:1px solid var(--border-soft);
+    border-radius:12px;
+  }
+  .flow-status{
+    font-size:13px;
+    color:var(--text-dim);
+  }
+  .flow-status strong{color:var(--text);}
+  .flow-buttons{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+  .flow-btn{
+    border:1px solid var(--border);
+    background:var(--panel);
+    color:var(--text);
+    border-radius:8px;
+    padding:8px 12px;
+    font:500 12px 'Inter',sans-serif;
+    cursor:pointer;
+    transition:all .18s ease;
+  }
+  .flow-btn:hover{border-color:var(--ws);transform:translateY(-1px);}
+  .flow-btn.primary{
+    background:var(--ws-dim);
+    border-color:var(--ws);
+    color:#CFF7EF;
+  }
+  .flow-btn:disabled{opacity:.4;cursor:not-allowed;transform:none;}
+  .flow-guide{
+    margin-top:22px;
+    padding:14px 16px;
+    border:1px solid var(--border-soft);
+    border-radius:10px;
+    color:var(--text-dim);
+    font-size:13px;
+    background:var(--panel-alt);
+  }
+  .flow-guide strong{color:var(--text);}
+  .flow-highlight{
+    outline:3px solid #FFF27A !important;
+    box-shadow:0 0 0 5px rgba(255,242,122,.16), 0 0 28px rgba(255,242,122,.5) !important;
+    background:#302F20 !important;
+    border-color:#FFF27A !important;
+    transform:scale(1.035);
+    z-index:10;
+    transition:all .3s ease;
+  }
+  .flow-dim{opacity:.34;transition:opacity .3s ease;}
+  .flow-active-link .link-line{
+    box-shadow:0 0 14px 4px rgba(255,242,122,.65);
+    background:#FFF27A !important;
+  }
+  .flow-active-link .link-label{color:#FFF27A !important;}
+  .flow-active-link .link-line::before,
+  .flow-active-link .link-line::after{background:#FFF27A !important;}
+  .flow-active-badge{
+    background:#FFF27A !important;
+    color:#111 !important;
+    border-color:#FFF27A !important;
+  }
+  .flow-hidden-note{display:none;}
+  @media (max-width:700px){
+    .flow-controls{align-items:flex-start;flex-direction:column;}
+  }
+
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <h1>Playwright Architecture</h1>
+    <p>How a test script — in any supported language — ends up clicking a button inside Chromium, Firefox, or WebKit. Numbers below map straight onto the diagram.</p>
+  </header>
+
+  <section class="diagram">
+    <div class="flow-controls">
+      <div class="flow-status">
+        <strong id="flowTitle">Guided flow</strong>
+        <span id="flowDescription">Step through the architecture from your test script to the browser engine.</span>
+      </div>
+      <div class="flow-buttons">
+        <button class="flow-btn primary" id="flowToggle" type="button">▶ Start flow</button>
+        <button class="flow-btn" id="flowPrev" type="button" disabled>← Previous</button>
+        <button class="flow-btn" id="flowNext" type="button" disabled>Next →</button>
+        <button class="flow-btn" id="flowReset" type="button" disabled>Reset</button>
+      </div>
+    </div>
+    <div class="flow" id="architectureFlow">
+
+      <div class="node client flow-step" data-step="1">
+        <div class="node-title">Client Code</div>
+        <div class="node-sub">your test script</div>
+        <div class="lang-row">TS / JS · Python · Java · .NET</div>
+        <span class="badge">1</span>
+      </div>
+
+      <div class="link ws-link flow-step" data-step="2">
+        <span class="badge">2</span>
+        <div class="link-label">ws:// — WebSocket</div>
+        <div class="link-line"></div>
+        <div class="json-chip flow-step" data-step="3">
+          <span class="badge">3</span>
+          {"method":"Page.click","id":42,…}
+        </div>
+      </div>
+
+      <div class="node server flow-step" data-step="4">
+        <div class="node-title">Playwright Server</div>
+        <div class="node-sub">BrowserServer · Node.js</div>
+        <span class="badge">4</span>
+      </div>
+
+      <div class="link cdp-link flow-step" data-step="5">
+        <span class="badge">5</span>
+        <div class="link-label">CDP / CDP+</div>
+        <div class="link-line"></div>
+      </div>
+
+      <div class="engines">
+        <div class="engine-row">
+          <span class="tick"></span>
+          <div class="node engine chromium flow-step" data-step="6">
+            <span class="dot"></span>
+            <div>
+              <div class="node-title">Chromium</div>
+              <div class="node-sub">CDP</div>
+            </div>
+            <span class="badge">6</span>
+          </div>
+        </div>
+        <div class="engine-row">
+          <span class="tick"></span>
+          <div class="node engine firefox flow-step" data-step="7">
+            <span class="dot"></span>
+            <div>
+              <div class="node-title">Firefox</div>
+              <div class="node-sub">CDP+</div>
+            </div>
+            <span class="badge">7</span>
+          </div>
+        </div>
+        <div class="engine-row">
+          <span class="tick"></span>
+          <div class="node engine webkit flow-step" data-step="8">
+            <span class="dot"></span>
+            <div>
+              <div class="node-title">WebKit</div>
+              <div class="node-sub">CDP+</div>
+            </div>
+            <span class="badge">8</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <section class="hierarchy">
+    <h2>Inside one browser instance</h2>
+    <div class="nest browser-box">
+      <div class="nest-label"><span class="badge">9</span> Browser</div>
+      <div class="nest context-box">
+        <div class="nest-label"><span class="badge">10</span> BrowserContext</div>
+        <div class="pages-row">
+          <div class="page-box">Page <span style="opacity:.6">— tab 1</span></div>
+          <div class="page-box ghost">Page <span style="opacity:.6">— tab 2</span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="legend">
+    <div class="legend-group">
+      <h3>The request path</h3>
+      <div class="legend-item"><span class="legend-num">1</span><p><strong>Client Code.</strong> Your test calls Playwright's API — <span class="tag">page.click(), page.goto(), expect()</span> — from whichever language binding you installed.</p></div>
+      <div class="legend-item"><span class="legend-num">2</span><p><strong>WebSocket connection.</strong> One persistent, bidirectional socket links the client library to the server. Commands and events flow both ways over it — nothing is polled.</p></div>
+      <div class="legend-item"><span class="legend-num">3</span><p><strong>JSON-RPC format.</strong> Every call and every response is a plain JSON object with a method, its params, and an id. That's how a Python script can drive a Node.js process without sharing a runtime.</p></div>
+      <div class="legend-item"><span class="legend-num">4</span><p><strong>Playwright Server (BrowserServer).</strong> The real driver, written in Node.js. It receives JSON-RPC calls from any client language, launches and manages browser processes, and translates commands into engine-specific instructions.</p></div>
+      <div class="legend-item"><span class="legend-num">5</span><p><strong>CDP / CDP+.</strong> The server talks to each rendering engine over the Chrome DevTools Protocol — natively for Chromium, and over Playwright's own CDP-style protocol for its patched Firefox and WebKit builds.</p></div>
+    </div>
+
+    <div class="legend-group">
+      <h3>Rendering engines</h3>
+      <div class="legend-item"><span class="legend-num">6</span><p><strong>Chromium.</strong> Speaks real CDP directly, so this same path also works against stock Chrome and Edge.</p></div>
+      <div class="legend-item"><span class="legend-num">7</span><p><strong>Firefox.</strong> A build patched by the Playwright team so it exposes a CDP-like protocol Firefox doesn't natively support.</p></div>
+      <div class="legend-item"><span class="legend-num">8</span><p><strong>WebKit.</strong> Same idea as Firefox — a patched build giving Safari's engine the same protocol surface.</p></div>
+    </div>
+
+    <div class="legend-group">
+      <h3>Inside a browser</h3>
+      <div class="legend-item"><span class="legend-num">9</span><p><strong>Browser.</strong> One OS-level process per engine, started and owned by the server.</p></div>
+      <div class="legend-item"><span class="legend-num">10</span><p><strong>BrowserContext.</strong> An isolated, incognito-style session — its own cookies, storage, and cache. Tests are typically given a fresh context each run for isolation.</p></div>
+      <div class="legend-item"><span class="legend-num">11</span><p><strong>Page.</strong> One tab inside a context. A single context can hold several pages at once, e.g. a page that opens a pop-up.</p></div>
+    </div>
+  </section>
+
+  <section class="flow-guide">
+    <strong>Note on terminology:</strong>
+    <code>*</code> means the label is simplified for this architecture diagram.
+    <strong>CDP</strong> is used for Chromium, while <strong>CDP+</strong> is used for Firefox and WebKit to represent Playwright's browser-specific CDP-like communication layer.
+    The <code>CDP+</code> label here is a diagram convention, not the name of an official protocol.
+  </section>
+
+  <footer>
+    Use <strong>Start flow</strong> to walk through the request path one step at a time. The active point is highlighted in bright yellow so the architecture can be explained easily during a presentation.
+  </footer>
+
+</div>
+
+<script>
+(function(){
+  const steps = [
+    {n:1, title:"1 · Client Code", desc:"Your test starts here — for example, page.click(), page.goto(), or expect()."},
+    {n:2, title:"2 · WebSocket", desc:"The client sends commands to the Playwright server over a persistent WebSocket connection."},
+    {n:3, title:"3 · JSON-RPC", desc:"The command is represented as a JSON message containing the method, parameters, and request id."},
+    {n:4, title:"4 · Playwright Server", desc:"The Node.js Playwright server receives the request and translates it into browser-specific instructions."},
+    {n:5, title:"5 · CDP / CDP+", desc:"The server communicates with the selected browser engine using the protocol layer represented in this diagram."},
+    {n:6, title:"6 · Chromium", desc:"Chromium is shown as using CDP."},
+    {n:7, title:"7 · Firefox", desc:"Firefox is shown as using CDP+ in this diagram."},
+    {n:8, title:"8 · WebKit", desc:"WebKit is shown as using CDP+ in this diagram."}
+  ];
+
+  const flow = document.getElementById("architectureFlow");
+  const title = document.getElementById("flowTitle");
+  const desc = document.getElementById("flowDescription");
+  const toggle = document.getElementById("flowToggle");
+  const prev = document.getElementById("flowPrev");
+  const next = document.getElementById("flowNext");
+  const reset = document.getElementById("flowReset");
+  const guide = document.querySelector(".flow-guide");
+
+  let active = 0;
+  let running = false;
+
+  function allTargets(){
+    return [...document.querySelectorAll(".flow-step")];
+  }
+
+  function clearHighlights(){
+    allTargets().forEach(el => {
+      el.classList.remove("flow-highlight","flow-dim","flow-active-link");
+    });
+    document.querySelectorAll(".badge").forEach(b => b.classList.remove("flow-active-badge"));
+  }
+
+  function render(){
+    clearHighlights();
+    if(!running){
+      title.textContent = "Guided flow";
+      desc.textContent = "Step through the architecture from your test script to the browser engine.";
+      prev.disabled = true;
+      next.disabled = true;
+      reset.disabled = true;
+      toggle.textContent = "▶ Start flow";
+      return;
+    }
+
+    const current = steps[active];
+    title.textContent = current.title;
+    desc.textContent = current.desc;
+
+    const target = document.querySelector('.flow-step[data-step="' + current.n + '"]');
+    if(target){
+      target.classList.add("flow-highlight");
+      target.scrollIntoView({behavior:"smooth",block:"nearest",inline:"center"});
+    }
+
+    // Dim other flow points, but keep the current step bright.
+    allTargets().forEach(el => {
+      if(el !== target) el.classList.add("flow-dim");
+    });
+
+    // Highlight the connector itself for WebSocket/CDP steps.
+    if(target && target.classList.contains("link")){
+      target.classList.remove("flow-dim");
+      target.classList.add("flow-active-link");
+    }
+
+    prev.disabled = active === 0;
+    next.disabled = active === steps.length - 1;
+    reset.disabled = false;
+    toggle.textContent = active === steps.length - 1 ? "↻ Replay flow" : "⏸ Pause flow";
+  }
+
+  toggle.addEventListener("click", function(){
+    if(!running){
+      running = true;
+      active = 0;
+      render();
+      return;
+    }
+    if(active === steps.length - 1){
+      active = 0;
+      render();
+    } else {
+      running = false;
+      clearHighlights();
+      title.textContent = "Guided flow paused";
+      desc.textContent = "Press Start flow to continue the explanation.";
+      prev.disabled = true;
+      next.disabled = true;
+      reset.disabled = false;
+      toggle.textContent = "▶ Resume flow";
+    }
+  });
+
+  next.addEventListener("click", function(){
+    if(!running) return;
+    active = Math.min(active + 1, steps.length - 1);
+    render();
+  });
+
+  prev.addEventListener("click", function(){
+    if(!running) return;
+    active = Math.max(active - 1, 0);
+    render();
+  });
+
+  reset.addEventListener("click", function(){
+    running = false;
+    active = 0;
+    clearHighlights();
+    render();
+  });
+
+  // Clicking a numbered point jumps directly to that step.
+  allTargets().forEach(el => {
+    el.addEventListener("click", function(e){
+      if(e.target.closest("button")) return;
+      const n = Number(el.dataset.step);
+      if(!n) return;
+      running = true;
+      active = Math.max(0, steps.findIndex(s => s.n === n));
+      render();
+    });
+  });
+
+  render();
+})();
+</script>
+
+</body>
+</html>

@@ -7,6 +7,8 @@ Everything here is beginner friendly: install Playwright, run the sample tests, 
 
 ---
 
+GitHub URL: https://github.com/Vinayhomevinay/LearningPlaywrightFundamentals3xVinay.git
+
 ## Playwright architecture
 
 ![Playwright Architecture - The Testing Academy](docs/images/playwright-architecture.png)

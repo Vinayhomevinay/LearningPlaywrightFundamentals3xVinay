@@ -19,11 +19,13 @@ test("Test the url after wrong login",async ({page})=>{
     let url_afterdata= page.url();
     console.log(url_afterdata);
 
-    if (url_beforedata===url_afterdata){
-        console.log("URL is same");
-        }
-       else{
-         console.log("URL is Different");   
-        } 
+    expect(url_afterdata).not.toEqual(url_beforedata);
+
+    // if (url_beforedata===url_afterdata){
+    //     console.log("URL is same");
+    //     }
+    //    else{
+    //      console.log("URL is Different");   
+    //     } 
 
 });

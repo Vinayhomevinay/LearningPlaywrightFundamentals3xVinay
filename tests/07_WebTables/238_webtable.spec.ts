@@ -24,9 +24,11 @@ test ('verify the Webtable example1', async ({page})=>{
 
           if (data.includes("Helen Bennett"))
           {
-            const countrypath=dynamicxpath+"/following-sibling::td";
+            const countrypath=`${dynamicxpath}/following-sibling::td`;
              const data1= await page.locator(countrypath).innerText();
-              console.log(data1);
+              
+              console.log('------');
+             console.log(`Helen Bennett is In - ${data1}`);
           }
 
 

@@ -23,6 +23,11 @@ test('test orangehrm web table add and delete',async ({page})=>{
    expect(val1).toBe('Amod Pandey');
    await page.locator('span').filter({ hasText: 'PIM' }).first().click();
    let attempts = 0;
+   
+   await expect(page).toHaveURL("https://opensource-demo.orangehrmlive.com/web/index.php/pim/viewEmployeeList");
+   await expect(page.locator("div.oxd-table-card").first()).toBeVisible();
+   
+   
    let row;
     while (true){
       row = page.locator('//div[@class="oxd-table-body"]/div').filter({ hasText: name });
@@ -32,27 +37,28 @@ test('test orangehrm web table add and delete',async ({page})=>{
          break;
       }
      //await page.waitForTimeout(10000);
-      //await page.waitForLoadState('networkidle'); // or a specific element wait
-      const nextbutton= page.locator("//i[@class='oxd-icon bi-chevron-right']")
-      
+
+      const nextbutton= page.locator("//ul[@class='oxd-pagination__ul']//li[last()]//button")
       const nextCount = await nextbutton.count();
+
       console.log(`Attempt ${attempts}: nextCount = ${nextCount}`);
       
       if (nextCount === 0) {
-         console.log(nextCount);
        throw new Error("name not found");
       }
-
-     
-
+    
       await  nextbutton.click();
+      
       await page.waitForTimeout(500);
+      
       attempts++;
 
     }
 
-    await row.locator("/div/div[9]/div/button[2]").click();
 
+   // await row.locator("/div/div[9]/div/button[2]").click();
+     await row.locator("button i.bi-trash").click();
+     await page.getByRole('button', { name: ' Yes, Delete' }).click();
 
 await page.pause();
 

@@ -1,4 +1,4 @@
-import {test,expect} from '@playwright/test';
+import {test} from '@playwright/test';
 
 
 test('test orangehrm web table add and delete',async ({page})=>{
@@ -22,12 +22,8 @@ test('test orangehrm web table add and delete',async ({page})=>{
    
    await page.getByRole('heading', { name: 'Personal Details' }).isVisible();
 
-  
 
    await page.locator('span').filter({ hasText: 'PIM' }).first().click();
-
-
-
 
 
 await page.pause();

@@ -56,7 +56,8 @@ test('test orangehrm web table add and delete',async ({page})=>{
     }
 
 
-   // await row.locator("/div/div[9]/div/button[2]").click();
+   
+    //await row.locator("xpath=.//div/div[9]/div/button[2]").click();
      await row.locator("button i.bi-trash").click();
      await page.getByRole('button', { name: ' Yes, Delete' }).click();
 

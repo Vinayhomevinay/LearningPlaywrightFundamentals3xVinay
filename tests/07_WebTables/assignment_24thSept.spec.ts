@@ -28,15 +28,9 @@ test('assignment 24thSept',async({page})=>{
           if (dynamicxpathcontent.includes('Rohan.Mehta'))
           {
             const precedingxpath=`${dynamicxpath}/preceding-sibling::td/input`;
-            await page.locator(precedingxpath).check();
-
-
-
-            
+            await page.locator(precedingxpath).check();      
             
           }
-
-
 
       }
 

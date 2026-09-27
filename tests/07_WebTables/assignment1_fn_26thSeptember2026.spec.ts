@@ -23,7 +23,7 @@ async function returnrownumber(page: Page, name: string): Promise<Locator>{
 
 }
 
-test('test orangehrm web table add and delete',async ({page})=>{
+test('test orangehrm web table add and delete using function',async ({page})=>{
 
     const name="Amod"; 
    const lastname="Pandey";
@@ -52,7 +52,8 @@ test('test orangehrm web table add and delete',async ({page})=>{
    const rowLocator = await returnrownumber(page,name);
 
    await rowLocator.locator("button i.bi-trash").click();
-    await page.getByRole('button', { name: ' Yes, Delete' }).click();
+   await page.waitForTimeout(500); 
+   await page.getByRole('button', { name: ' Yes, Delete' }).click();
 
     await page.pause();
 

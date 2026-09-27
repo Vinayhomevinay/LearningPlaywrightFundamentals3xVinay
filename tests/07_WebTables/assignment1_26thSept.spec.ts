@@ -36,12 +36,8 @@ test('test orangehrm web table add and delete',async ({page})=>{
       {
          break;
       }
-     //await page.waitForTimeout(10000);
-
       const nextbutton= page.locator("//ul[@class='oxd-pagination__ul']//li[last()]//button")
       const nextCount = await nextbutton.count();
-
-      console.log(`Attempt ${attempts}: nextCount = ${nextCount}`);
       
       if (nextCount === 0) {
        throw new Error("name not found");
@@ -51,7 +47,6 @@ test('test orangehrm web table add and delete',async ({page})=>{
       
       await page.waitForTimeout(500);
       
-      attempts++;
 
     }
 

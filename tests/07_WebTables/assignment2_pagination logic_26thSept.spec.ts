@@ -1,7 +1,7 @@
 import { test, expect, Page, Locator } from '@playwright/test';
 
 async function pagination(page: Page): Promise<void> {
-  const nextbutton = page.locator('span:has-text("NEXT")');
+  
 
   while (true) {
 
@@ -15,13 +15,28 @@ async function pagination(page: Page): Promise<void> {
       console.log(linkprice);
     }
 
-    const isNextVisible = await nextbutton.isVisible().catch(() => false);
-    if (!isNextVisible) {
-      break;
-    }
+    
+   // const nextbutton = page.locator('span:has-text("NEXT")');
+    const nextbutton=page.locator("//a[normalize-space()='Next']").last(); 
+    
+    if (await nextbutton.count() === 0) {
+            break;
+        }
 
-    await nextbutton.click();
-    await page.locator('.RG5Slk').first().waitFor({ state: 'visible' });
+        if (!(await nextbutton.isVisible())) {
+            break;
+        }
+    // const isNextVisible = await nextbutton.isVisible().catch(() => false);
+    // if (!isNextVisible) {
+    //   break;
+    // }
+      
+        const currentUrl = page.url();
+        await Promise.all([page.waitForURL(newUrl => newUrl.toString() !== currentUrl),nextbutton.click()]);
+
+    // await nextbutton.click();
+    // await expect(page.locator("//div[@class='lvJbLV col-12-12']").first()).toBeVisible();
+    //await page.locator('.RG5Slk').first().waitFor({ state: 'visible' });
   }
 }
 

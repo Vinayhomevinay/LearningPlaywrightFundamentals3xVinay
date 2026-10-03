@@ -9,6 +9,7 @@ test('2nd assignment of a form',async ({page})=>{
     
     await expect(page).toHaveURL("https://demo.applitools.com/app.html");
 
+    
 
     await page.pause();
 

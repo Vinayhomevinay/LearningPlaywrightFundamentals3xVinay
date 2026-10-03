@@ -9,13 +9,12 @@ test("2nd assignment of a form", async ({ page }) => {
 
     //const valuecount = await page.locator("//td[@class='text-right bolder nowrap']").count();
     //console.log(valuecount);
+    await expect(page.locator("td[class='text-right bolder nowrap']").first()).toBeVisible();
+
     const Amounts: string[] = await page.locator("td[class='text-right bolder nowrap']").allInnerTexts();
     //console.log("Amounts:", Amounts);
-    
     const result = ExpenseCheck(Amounts);
-
     console.log(result.totalearned);
-
     expect(result.totalearned).toBeCloseTo(1996.22,2);
     console.log("TotalSpend :",result.totalspend);
 

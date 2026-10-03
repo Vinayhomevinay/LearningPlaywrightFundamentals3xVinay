@@ -23,7 +23,7 @@ test('fill the qa profile form ',async({page})=>{
     await page.getByTestId("profile-submit").click();
 
     const outputlog= await page.locator("#submission-output").innerText();
-   await expect(page.locator("#submission-output")).toContainText("Vinay");
+   await expect(page.locator("#submission-output")).toContainText(firstname);
     console.log(outputlog);
 
 });

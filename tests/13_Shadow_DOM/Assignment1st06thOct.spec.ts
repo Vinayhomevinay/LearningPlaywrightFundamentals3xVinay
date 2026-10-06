@@ -16,11 +16,11 @@ test ("Testing the shadow dom assignment",async({page})=>{
     
     await jackport.locator("#kils").fill("vinay");
     await jackport.locator("#pizza").fill("farmhouse");
-    await page.keyboard.press("TAB");
-    await page.keyboard.press("keyboardmethods");
-    await page.keyboard.press("TAB");
-    await page.keyboard.press("TAB");
-    await page.keyboard.press("secret123");
+    await page.keyboard.press('Tab');
+    await page.keyboard.type("keyboardmethods");
+    await page.keyboard.press('Tab');
+    await page.keyboard.press('Tab');
+    await page.keyboard.type("secret123");
 
     
     await page.pause();

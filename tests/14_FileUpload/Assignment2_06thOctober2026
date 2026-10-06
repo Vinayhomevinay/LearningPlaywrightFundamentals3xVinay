@@ -1,0 +1,11 @@
+import {test} from '@playwright/test';
+import path from 'path';
+
+const UPLOAD_DIR = path.join("C:\Users\DVBV5335\Downloads");
+
+
+
+test("uploading image to profile",async({page})=>{
+
+
+});

@@ -12,7 +12,8 @@ test('Expect assertions test',async({page})=>{
     await expect.soft(page.locator("#page-title")).toHaveText("Master multiple element filters on a real login UI");
 
     await expect(page.locator("#footer-links a")).toHaveCount(16);
-
+    await expect (page.locator("div[class='list-group'] a")).toHaveCount(13);
+    
 
 
 });

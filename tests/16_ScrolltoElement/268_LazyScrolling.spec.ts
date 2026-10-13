@@ -14,7 +14,7 @@ test.describe('Lazy scrolling to load the elements', () => {
         await page.getByTestId('lazy-list').scrollIntoViewIfNeeded();
 
 
-        const list= page.getByTestId('lazy-list').locator('li');
+        const list= page.locator('#lazy-list li');
 
         await expect(list).toHaveCount(10);
 

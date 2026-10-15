@@ -9,10 +9,12 @@
   "description": "",
   "devDependencies": {
     "@playwright/test": "^1.64.0",
+    "@types/js-yaml": "^4.0.9",
     "@types/node": "^26.6.5"
   },
   "dependencies": {
     "dotenv": "^18.0.6",
-    "fs": "^0.0.1-security"
+    "fs": "^0.0.1-security",
+    "js-yaml": "^5.4.3"
   }
 }

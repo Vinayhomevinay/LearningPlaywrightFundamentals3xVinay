@@ -9,11 +9,10 @@
   "description": "",
   "devDependencies": {
     "@playwright/test": "^1.64.0",
-    "@types/node": "^26.5.0"
+    "@types/node": "^26.6.5"
   },
   "dependencies": {
     "dotenv": "^18.0.6",
-    "fs": "^0.0.1-security",
-    "path": "^0.12.7"
+    "fs": "^0.0.1-security"
   }
 }

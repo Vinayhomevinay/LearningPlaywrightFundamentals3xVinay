@@ -10,6 +10,10 @@ test('Login flow check',async({page})=>{
         await loginPage.loginflow('standard_user','tta_secret');
         await expect(page).toHaveTitle('TTACart - Products');
 
+        //await page.pause();
+       // await page.locator("//a[@id='shopping_cart_container']//*[name()='svg']").click();
+
+       // await page.pause();
 })
 
 

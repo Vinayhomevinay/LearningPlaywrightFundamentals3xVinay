@@ -23,7 +23,7 @@ export class InventoryPage{
            const iteamName= await this.firstItemName.innerText();
            await this.firstItemAddtoCart.click();
            await this.addItemtoCart.click();
-
+            return iteamName;
         }
 
 
